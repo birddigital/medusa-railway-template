@@ -1,0 +1,61 @@
+{
+  "name": "medusa-railway-deploy",
+  "version": "2.0.0",
+  "description": "MedusaJS 2.0 deployment for Railway",
+  "author": "AI Development Monorepo",
+  "license": "MIT",
+  "keywords": [
+    "medusa",
+    "ecommerce",
+    "railway"
+  ],
+  "scripts": {
+    "build": "medusa build",
+    "start": "medusa start",
+    "start:prod": "NODE_ENV=production medusa start",
+    "dev": "medusa dev",
+    "seed": "medusa seed",
+    "migrations:run": "medusa migrations run",
+    "post-deploy": "bash scripts/post-deploy.sh",
+    "create-admin": "node scripts/create-admin.js",
+    "validate-env": "node scripts/validate-env.js",
+    "validate-deployment": "node scripts/validate-deployment.js",
+    "setup-minio": "node scripts/setup-minio.js",
+    "setup-meilisearch": "node scripts/setup-meilisearch.js"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "^2.0.0",
+    "@medusajs/framework": "^2.0.0",
+    "@medusajs/medusa": "^2.0.0",
+    "@medusajs/medusa-cli": "^2.0.0",
+    "@medusajs/file-s3": "^2.0.0",
+    "@mikro-orm/core": "5.9.7",
+    "@mikro-orm/knex": "5.9.7",
+    "@mikro-orm/migrations": "5.9.7",
+    "@mikro-orm/postgresql": "5.9.7",
+    "awilix": "^10.0.2",
+    "pg": "^8.13.1",
+    "ioredis": "^5.3.2",
+    "minio": "^7.1.3",
+    "meilisearch": "^0.35.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@medusajs/test-utils": "^2.0.0",
+    "@mikro-orm/cli": "5.9.7",
+    "@swc/core": "^1.7.40",
+    "@swc/jest": "^0.2.36",
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "jest": "^29.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

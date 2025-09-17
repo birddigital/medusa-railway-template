@@ -1,0 +1,211 @@
+{
+  "$schema": "https://railway.app/template.schema.json",
+  "name": "MedusaJS 2.0 Pro Stack",
+  "description": "Production-ready e-commerce platform with MedusaJS 2.0, including admin dashboard, storefront, PostgreSQL, Redis, MinIO storage, and MeiliSearch",
+  "image": "https://raw.githubusercontent.com/medusajs/medusa/develop/www/docs/static/img/banner.jpg",
+  "repository": "https://github.com/birddigital/ai-development-monorepo",
+  "branch": "main",
+  "root": "/projects/active-projects/medusa-railway-deploy",
+  
+  "services": [
+    {
+      "id": "medusa-backend",
+      "name": "MedusaJS Backend",
+      "source": {
+        "type": "github",
+        "repo": "birddigital/ai-development-monorepo",
+        "ref": "main",
+        "rootDirectory": "projects/active-projects/medusa-railway-deploy"
+      },
+      "builder": "nixpacks",
+      "buildCommand": "npm ci && npm run build",
+      "startCommand": "npm run start:prod",
+      "healthcheckPath": "/health",
+      "envs": {
+        "NODE_ENV": "production",
+        "JWT_SECRET": {
+          "generator": "secret",
+          "length": 32
+        },
+        "COOKIE_SECRET": {
+          "generator": "secret",
+          "length": 32
+        },
+        "DATABASE_URL": {
+          "$ref": "postgres.DATABASE_URL"
+        },
+        "REDIS_URL": {
+          "$ref": "redis.REDIS_URL"
+        },
+        "MINIO_ENDPOINT": {
+          "$ref": "minio.ENDPOINT"
+        },
+        "MINIO_ACCESS_KEY": {
+          "$ref": "minio.ROOT_USER"
+        },
+        "MINIO_SECRET_KEY": {
+          "$ref": "minio.ROOT_PASSWORD"
+        },
+        "MINIO_BUCKET": "medusa-uploads",
+        "MEILISEARCH_HOST": {
+          "$ref": "meilisearch.URL"
+        },
+        "MEILISEARCH_API_KEY": {
+          "$ref": "meilisearch.MASTER_KEY"
+        },
+        "ADMIN_EMAIL": {
+          "default": "admin@store.com",
+          "description": "Email for the admin user"
+        },
+        "ADMIN_PASSWORD": {
+          "generator": "secret",
+          "length": 16,
+          "description": "Password for the admin user"
+        },
+        "STORE_CORS": {
+          "default": "*",
+          "description": "CORS origin for the storefront"
+        },
+        "ADMIN_CORS": {
+          "default": "*",
+          "description": "CORS origin for the admin dashboard"
+        }
+      },
+      "deploy": {
+        "numReplicas": 1,
+        "region": "us-west1"
+      }
+    },
+    
+    {
+      "id": "postgres",
+      "name": "PostgreSQL Database",
+      "image": "postgres:15-alpine",
+      "volumes": [
+        {
+          "mountPath": "/var/lib/postgresql/data",
+          "size": "10Gi"
+        }
+      ],
+      "envs": {
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": {
+          "generator": "secret"
+        },
+        "POSTGRES_DB": "medusa_db"
+      },
+      "deploy": {
+        "numReplicas": 1
+      }
+    },
+    
+    {
+      "id": "redis",
+      "name": "Redis Cache",
+      "image": "redis:7-alpine",
+      "volumes": [
+        {
+          "mountPath": "/data",
+          "size": "1Gi"
+        }
+      ],
+      "envs": {
+        "REDIS_PASSWORD": {
+          "generator": "secret"
+        }
+      },
+      "deploy": {
+        "numReplicas": 1
+      }
+    },
+    
+    {
+      "id": "minio",
+      "name": "MinIO Storage",
+      "image": "minio/minio:latest",
+      "command": "server /data --console-address :9001",
+      "volumes": [
+        {
+          "mountPath": "/data",
+          "size": "5Gi"
+        }
+      ],
+      "envs": {
+        "MINIO_ROOT_USER": {
+          "generator": "username"
+        },
+        "MINIO_ROOT_PASSWORD": {
+          "generator": "secret"
+        }
+      },
+      "deploy": {
+        "numReplicas": 1
+      }
+    },
+    
+    {
+      "id": "meilisearch",
+      "name": "MeiliSearch",
+      "image": "getmeili/meilisearch:v1.4",
+      "volumes": [
+        {
+          "mountPath": "/meili_data",
+          "size": "2Gi"
+        }
+      ],
+      "envs": {
+        "MEILI_MASTER_KEY": {
+          "generator": "secret"
+        },
+        "MEILI_ENV": "production"
+      },
+      "deploy": {
+        "numReplicas": 1
+      }
+    }
+  ],
+  
+  "variables": {
+    "STORE_NAME": {
+      "default": "My Medusa Store",
+      "description": "The name of your store"
+    },
+    "STORE_URL": {
+      "description": "The URL where your store will be accessible",
+      "required": false
+    },
+    "STRIPE_API_KEY": {
+      "description": "Stripe API key for payments (optional)",
+      "required": false
+    },
+    "SENDGRID_API_KEY": {
+      "description": "SendGrid API key for emails (optional)",
+      "required": false
+    }
+  },
+  
+  "deploy": {
+    "postDeploy": [
+      {
+        "command": "npm run migrations:run",
+        "service": "medusa-backend"
+      },
+      {
+        "command": "npm run seed",
+        "service": "medusa-backend"
+      },
+      {
+        "command": "npm run create-admin",
+        "service": "medusa-backend"
+      }
+    ]
+  },
+  
+  "metadata": {
+    "version": "2.0.0",
+    "author": "Bird Digital",
+    "license": "MIT",
+    "tags": ["ecommerce", "medusajs", "nodejs", "postgresql", "redis"],
+    "readme": "https://raw.githubusercontent.com/birddigital/ai-development-monorepo/main/projects/active-projects/medusa-railway-deploy/README.md"
+  }
+}

@@ -1,0 +1,64 @@
+# Railway Template Configuration for MedusaJS 2.0
+# Complete e-commerce stack with all services
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci && npm run build"
+watchPatterns = ["src/**", "package.json"]
+
+[deploy]
+startCommand = "npm run start:prod"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+region = "us-west1"
+numReplicas = 1
+
+# Environment setup
+[env]
+NODE_ENV = "production"
+PORT = "9000"
+
+# Service dependencies
+[[services]]
+name = "postgres"
+image = "postgres:15-alpine"
+volumes = ["/var/lib/postgresql/data"]
+env = {
+  POSTGRES_USER = "postgres",
+  POSTGRES_PASSWORD = { generator = "secret" },
+  POSTGRES_DB = "medusa_db"
+}
+
+[[services]]
+name = "redis"
+image = "redis:7-alpine"
+volumes = ["/data"]
+env = {
+  REDIS_PASSWORD = { generator = "secret" }
+}
+
+[[services]]
+name = "minio"
+image = "minio/minio:latest"
+command = "server /data --console-address :9001"
+volumes = ["/data"]
+env = {
+  MINIO_ROOT_USER = { generator = "username" },
+  MINIO_ROOT_PASSWORD = { generator = "secret" }
+}
+
+[[services]]
+name = "meilisearch"
+image = "getmeili/meilisearch:v1.4"
+volumes = ["/meili_data"]
+env = {
+  MEILI_MASTER_KEY = { generator = "secret" },
+  MEILI_ENV = "production"
+}
+
+# Post-deployment actions
+[deploy.scripts]
+postDeploy = "npm run post-deploy"
+preDeploy = "npm run validate-env"
